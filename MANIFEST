@@ -1,0 +1,34 @@
+bin/setup.pl
+Changes
+etc/mts.ini
+INSTALL
+lib/Module/Template/Setup.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+t/00_load.t
+t/config.t
+t/get_data.t
+t/handle_modulename.t
+t/make_dirs.t
+t/make_file.t
+t/make_files.t
+t/make_module_dirs.t
+t/make_module_file.t
+t/make_modulename_dirs.t
+t/make_modulename_file.t
+t/make_modulename_perl.t
+t/make_test_files.t
+t/pod-coverage.t
+t/pod.t
+templates/00_load_t.tpl
+templates/Changes.tpl
+templates/INSTALL.tpl
+templates/Makefile_PL.tpl
+templates/module_pm.tpl
+templates/pod-coverage_t.tpl
+templates/pod_t.tpl
+templates/README.tpl
+templates/TODO.tpl
+TODO
+META.yml                                Module meta-data (added by MakeMaker)
