@@ -1,16 +1,17 @@
 package Module::Template::Setup;
 
-# $Id: Setup.pm,v 1.12 2004/03/31 10:48:55 jonasbn Exp $
+# $Id: Setup.pm,v 1.16 2004/05/15 14:25:53 jonasbn Exp $
 
 use strict;
-use vars qw($VERSION);
+use vars qw($VERSION %licenses);
 use Env qw(HOME);
 use Cwd;
 use Carp;
 use Config::Simple;
 use CGI::FastTemplate;
+use Module::Template::Setup::Licenses qw(%licenses);
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 sub new {
 	my ($class, %params) = @_;
@@ -41,7 +42,7 @@ sub new {
 	$self->{'defaults'}->{'MODULEDIRS'} = join('/',@{$self->{'moduledirs'}});
 
 	my $cfg;
-	if ($params{'configfile'} && -e  $params{'configfile'} && -r $params{'configfile'}) {
+	if ($params{'configfile'} && -e _ && -r _) {
 		
 		$cfg = new Config::Simple($params{'configfile'});
 	}
@@ -51,7 +52,7 @@ sub new {
 }
 
 sub _get_data {
-	my ($self, $cfg, $params) = @_;
+	my ($self, $cfg, $args) = @_;
 
 	my $year = (localtime(time))[5] + 1900;
 
@@ -71,11 +72,16 @@ sub _get_data {
 			$cfg->param('LICENSEDETAILS')?$cfg->param('LICENSEDETAILS'):'';
 	}
 	
-	if ($params) {
+	if ($args) {
 		$all_defaults{'DATEYEAR'} =
-			$params->{'YEAR'}?$params->{'YEAR'}:"$year";
+			$args->{'YEAR'}?$args->{'YEAR'}:"$year";
 		$all_defaults{'VERSIONNUMBER'} =
-			$params->{'VERSIONNUMBER'}?$params->{'VERSIONNUMBER'}:'0.01';
+			$args->{'VERSIONNUMBER'}?$args->{'VERSIONNUMBER'}:'0.01';
+	
+		$all_defaults{'LICENSENAME'} =
+			$args->{'licensename'}?$args->{'licensename'}:'artistic';
+		$all_defaults{'LICENSEDETAILS'} =
+			$args->{'licensedetails'}?$args->{'licensedetails'}:$self->_get_license_details($all_defaults{'LICENSENAME'}, \%licenses);
 	}
 
 	foreach my $d (keys (%{$self->{'defaults'}})) {
@@ -85,18 +91,28 @@ sub _get_data {
 	return \%all_defaults;
 }
 
+sub _get_license_details {
+	my ($self, $licensename, $licenses) = @_;
+
+	my $licensedetails = $licenses->{$licensename}
+		|| carp "Unknown license $licensename - please notify the author\n";
+
+	return $licensedetails;
+}
+
 sub setup {
 	my ($self, %params) = @_;
 
 	my @dirs = qw(t lib);
-	my @files = qw(Makefile.PL Changes TODO INSTALL README);
+	my @files = qw(Changes TODO INSTALL README MANIFEST.SKIP);
 	my @tests = qw(00.load.t pod-coverage.t pod.t);
+	my $debug = $params{'debug'}?1:0;
 
 	my $tpl = new CGI::FastTemplate("$HOME/.mts/templates");
 	$tpl->define(
 		Changes          => "Changes.tpl",
 		INSTALL          => "INSTALL.tpl",
-		Makefile_PL      => "Makefile_PL.tpl",
+		MANIFEST_SKIP    => "MANIFEST_SKIP.tpl",
 		README           => "README.tpl",
 		TODO             => "TODO.tpl",
 		pod_t            => "pod_t.tpl",
@@ -105,6 +121,23 @@ sub setup {
 		'00_load_t'      => "00_load_t.tpl",
 	);
 
+	if ($params{'build'} eq 'build') {
+		push (@files, "Build.PL");
+		$tpl->define(
+			Build_PL => 'Build_PL.tpl',
+		);
+		
+	} elsif (not $params{'build'} or $params{'build'} eq 'make') {
+		push (@files, "Makefile.PL");
+		$tpl->define(
+			Makefile_PL => 'Makefile_PL.tpl',
+		);
+	}
+	if ($debug) {
+		print STDERR "We are have target: $params{'build'}\n";
+		use Data::Dumper;
+		print STDERR Dumper $tpl;
+	}
 	$tpl->assign($self->{'defaults'});
 
 	mkdir($self->{'defaults'}->{'MODULENAME'});
@@ -249,7 +282,7 @@ Module::Template::Setup - aid in setting up a module based on templates
 
 =head1 VERSION
 
-Module::Template::Setup 0.01
+Module::Template::Setup 0.03
 
 =head1 SYNOPSIS
 
@@ -302,7 +335,40 @@ in either of the following formats:
 
 =head3 setup
 
-This method does the actual work, based on the initialized object:
+This method does the actual work, based on the initialized object.
+
+setup takes an optional argument 'build' which can be set to either:
+
+=over 4
+
+=item build - creates a Build.PL
+
+=item make - creates a Makefile.PL
+
+=back
+
+setup also takes can also fill in license details for the following license 
+types:
+
+=over 4
+
+=item artistic (default)
+
+=item gpl
+
+=item lgpl
+
+=item bsd
+
+=back
+
+It is possilbe to give an license name, which is unknown by the module, or you
+can overwrite the license description my giving the argument "licensedetails".
+
+See Module::Template::Setup::Licenses for more details on licenses -
+more licenses or better descriptions are of course welcome.
+
+The proces in setup.
 
 =over 4
 
@@ -354,6 +420,8 @@ The following templates are used to populate the directories.
 In the root directory:
 
 =over 4
+
+=item Makefile_PL.tpl or Build_PL.tpl
 
 =item Changes.tpl
 
@@ -510,6 +578,8 @@ Feedback also welcome on this address or directly to me on the address below (SE
 
 =item Test::Pod::Coverage
 
+=item Module::Template::Setup::Licenses
+
 =back
 
 =head1 AUTHOR
@@ -520,8 +590,8 @@ Jonas B. Nielsen (jonasbn) - E<lt>jonasbn@cpan.orgE<gt>
 
 Module::Template::Setup is (C) by Jonas B. Nielsen (jonasbn) 2004
 
-Module::Template::Setup is free software and is released
-under the Artistic License. See 
+Module::Template::Setup and related script and modules are free
+software and is released under the Artistic License. See 
 L<http://www.perl.com/language/misc/Artistic.html> for details. 
 
 =cut

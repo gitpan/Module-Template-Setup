@@ -1,6 +1,29 @@
 Changes file for Module-Template-Setup
 
-$Id: Changes,v 1.5 2004/03/31 10:48:55 jonasbn Exp $
+$Id: Changes,v 1.13 2004/05/15 14:15:04 jonasbn Exp $
+
+0.03 Released Sat May 15 2004, update not necessary
+
+- Added possibility of adding a license using setup.pl or giving one of the
+  known licenses: artistic (default), lgpl, lgp and bsd
+
+- Added helper module: Module::Template::Setup::Licenses and a simple test   
+
+- Added options for choosing between: ExtUtils::MakeMaker or Module::Build     
+  to bin/setup.pl and setup method
+
+- Added Module_PL.tpl template for support of Module::Build
+
+- Added BUGS section to module template indicating how to report bugs
+  the paragraph was borrowed from LTHEGLERs Date::Holidays::DK
+
+- Added subversion (svn) and pm_to_blib to MANIFEST.SKIP template
+
+- Added <> signs around the author emailaddress in the module template
+ 
+- Added CVSTAG to module template
+
+- Added MANIFEST.SKIP template (MANIFEST_SKIP.tpl)
 
 0.02 Released Wed Mar 31 2004, update recommended
 
